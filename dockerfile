@@ -14,10 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 创建 Conda 环境并安装依赖
-RUN conda create -n MinerU python=3.10 -y && \
-    echo "source activate MinerU" >> ~/.bashrc && \
-    /bin/bash -c "source ~/.bashrc && conda activate MinerU && \
-    pip install magic-pdf[full]==0.7.0b1 --extra-index-url https://wheels.myhloli.com -i https://pypi.tuna.tsinghua.edu.cn/simple"
+RUN conda create -n MinerU python=3.10 -y
+RUN echo "source /opt/conda/etc/profile.d/conda.sh && conda activate MinerU" >> ~/.bashrc
+RUN /bin/bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate MinerU && pip install magic-pdf[full]==0.7.0b1 --extra-index-url https://wheels.myhloli.com -i https://pypi.tuna.tsinghua.edu.cn/simple"
 
 # 克隆 Git LFS 仓库并安装 Git LFS
 RUN git lfs install && \
