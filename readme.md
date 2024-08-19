@@ -6,9 +6,9 @@
 
 ## GPU模式
 
-1. 在宿主机(ubuntu 22.04)上执行下面的命令
+1. ~~在宿主机(ubuntu 22.04)上执行下面的命令~~
 
-   配置apt源
+   ~~配置apt源~~
 
    ```shell
    distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
@@ -17,7 +17,7 @@
    
    ```
 
-   安装nvidia-container-toolkit
+   ~~安装nvidia-container-toolkit~~
 
    ```shell
    sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
@@ -25,8 +25,14 @@
 
 2. 重启docker后构建镜像
 
+   ```powershell
+   docker build -t mineru-env-gpu .
+   ```
+
+​		在启动container时将本机模型目录挂载到container /PDF-Extract-Kit中
+
    ```shell
-   docker run --gpus all -it mineru-env # 启用gpu
+   docker run -v /root/PDF-Extract-Kit:/PDF-Extract-Kit --gpus all -it mineru-env-gpu
    ```
 
 3. 验证安装效果：
@@ -61,42 +67,28 @@
     docker cp <path-to-file> <container-name>:/PDF-Extract-Kit
    ```
 
-5. 修改配置文件:修改【用户目录】（/root/magic-pdf.json）中配置文件magic-pdf.json中device-mode的值
+6. 启动MinerU环境
 
-   ```json
-   {
-     "device-mode":"cuda"
-   }
+   ```powershell
+   conda activate MinerU
    ```
 
-6. 运行
+7. 运行
 
    ```powershell
    magic-pdf -p <path-to-file>
    ```
 
-   
 
-## Run
+7. 运行失败，报错
 
-1. 构建 Docker 镜像
-
-	```shell
-	docker build -t mineru-env .
+	```powershell
+	RuntimeError: Unexpected error from cudaGetDeviceCount(). Did you 	run some cuda functions before calling NumCudaDevices() that might have already set an error? Error 500: named symbol not found
 	```
 
-2.  运行 Docker 容器
+主要问题是docker container中torch无法使用cuda，但是cuda实际上是安装的。
 
-   ```shell
-   # docker run --gpus all -it mineru-env # 启用gpu
-   docker run -it mineru-env # 不启用gpu（默认）
-   ```
+解决方案：
 
-3. 容器启动后测试从仓库中下载样本文件，并测试（optional）
-
-   ```shell
-   # wget https://gitee.com/myhloli/MinerU/raw/master/demo/small_ocr.pdf
-   magic-pdf -p small_ocr.pdf
-   ```
-
-4. 提取结果在`/PDF-Extract-Kit/output`中，源代码示例仓库也被拉取到`/MinerU`目录下。
+1. 参考博客 https://blog.csdn.net/abc1831939662/article/details/123455955 ，无效，该博客应该是用来解决多卡的问题。
+2. 参考https://stackoverflow.com/questions/66371130/cuda-initialization-unexpected-error-from-cudagetdevicecount  中涉及到k8s的解决方案，我在可以成功运行的宿主机上安装的版本是nvidia-driver-545，但是在container中的版本为530，然而container中无法成功安装545版本，也无法干净的卸载530版本。
